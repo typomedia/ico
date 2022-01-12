@@ -1,3 +1,6 @@
+// Copyright 2022 Staffan Thomen <staffan@thomen.fi>
+// Use of this source code is governed by a BSD-style license found in the
+// adjacent LICENSE file.
 package ico
 
 import (
