@@ -3,19 +3,19 @@
 // adjacent LICENSE file.
 package ico
 
-import (
-	"bytes"
-	"bufio"
-	"image"
-	"image/png"
-//	"image/bmp"
-	"encoding/binary"
-)
+import "image"
 
 // ICO file data from https://en.wikipedia.org/wiki/ICO_(file_format)
 
+// file type, icon or cursor
 const ICO = 1
 const CUR = 2
+
+// determine subimage type
+const PNG = 0
+const BMP = 1
+
+const NOALPHA = -1
 
 type iconDir struct {
 	_          uint16 // Reserved, must always be 0.
@@ -44,59 +44,60 @@ type iconDirEntry struct {
 // image. It is unknown if the various Windows operating system versions are
 // resilient to different color plane values.
 
-type Icon struct {
-	entries []image.Image
+// Abstract representation of the ICO/CUR file
+type icon struct {
+	Type int
+
+	Entries []struct {
+		Type int
+		Image image.Image
+		AlphaIndex int
+	}
 }
 
-func (self *Icon) Encode() ([]byte, error) {
-	header := new(bytes.Buffer)
-	bitmaps := new(bytes.Buffer)
-
-	var count = len(self.entries)
-
-	err := binary.Write(header, binary.LittleEndian, iconDir{0, ICO, uint16(count)})
-
-	if err != nil {
-		return nil, err
-	}
-
-	writer := bufio.NewWriter(bitmaps)
-
-	var offset = header.Len() + (binary.Size(iconDirEntry{}) * count)
-
-	for index := range self.entries {
-		bounds := self.entries[index].Bounds()
-
-		var size = bitmaps.Len()
-
-		// FIXME support BMP as well
-		err := png.Encode(writer, self.entries[index])
-		writer.Flush()
-
-		size = bitmaps.Len() - size
-
-		if err != nil {
-			return nil, err
-		}
-
-		entry := iconDirEntry{
-			uint8(bounds.Dx()),
-			uint8(bounds.Dy()),
-			0,                // FIXME Colors for paletted images
-			0,
-			1,                // XXX 0 or 1 is expected, anything else is unknown
-			32,               // XXX no clue if this is true, or if it matters for PNG based icons
-			uint32(size),
-			uint32(offset),
-		}
-
-		binary.Write(header, binary.LittleEndian, entry)
-		offset += bitmaps.Len()
-	}
-
-	return bytes.Join([][]byte{header.Bytes(),bitmaps.Bytes()}, []byte{}), nil
+// Create a new icon
+func New(t int) *icon {
+	var item = new(icon)
+	item.Type = t
+	return item
 }
 
-func (self *Icon) AddImage(image image.Image) {
-	self.entries = append(self.entries, image)
+// Create a new icon object
+func NewIcon() *icon {
+	return New(ICO)
+}
+
+// Create a new cursor object
+func NewCursor() *icon {
+	return New(CUR)
+}
+
+// Add a png to the image
+func (self *icon) AddPng(img image.Image) {
+	self.Add(PNG, img, NOALPHA)
+}
+
+// Add a bitmap to the image
+func (self *icon) AddBmp(img image.Image) {
+	self.Add(BMP, img, NOALPHA)
+}
+
+// Add a bitmap to the image with an alpha
+func (self *icon) AddBmpAlpha(img image.Image, alphaIndex int) {
+	self.Add(BMP, img, alphaIndex)
+}
+
+// Add an image to the icon structure
+func (self *icon) Add(t int, img image.Image, alphaIndex int) {
+	var entry = struct {
+		Type int
+		Image image.Image
+		AlphaIndex int
+	} {
+		t,
+		img,
+		alphaIndex,
+	}
+
+	self.Entries = append(self.Entries, entry)
 }
