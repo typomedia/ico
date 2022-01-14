@@ -1,19 +1,32 @@
 ico
 ===
 
-This is a simple library for building windows ICO files
+This is a simple module library for building windows ICO files that may some
+day be complete.
 
-Usage
------
+The module features an abstraction type for icon files so they can be decoded
+as well as encoded.
 
-Create a new ico.Icon and add [image.Image](https://pkg.go.dev/image#Image)s to
-it by calling Icon.AddImage(), and render the image into a byte array using
-Icon.Encode().
+Features that I intend to include are:
 
-TODO
-----
+ - Encoding of PNG images (like most golang ico modules)
+ - Encoding of BMP images
+ - Encoding of paletted images
+ - Encoding of paletted images with alpha
+ - Decoding of ICO files
 
- - Read the image depth from the Image object and use that instead of hardcoding
-   32 bpp RGBA
- - Read ICO-files
- - BMP as well as PNG contents
+Example usage
+-------------
+
+```
+img := image.NewRGBA(image.Rect(0,0,32,32))
+
+eudenil := color.RGBA{164, 184, 135}
+
+draw.Draw(img, img.Bounds(), &image.Uniform{eudenil}, image.ZP, draw.Src)
+
+icon := ico.NewIcon()
+icon.AddPng(img)
+
+bytes, err := icon.Encode()
+```
