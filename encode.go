@@ -40,21 +40,20 @@ func (self *icon) Encode() ([]byte, error) {
 		var colors = 0
 		var bpp = 32
 
+		var bitmap []byte
+		var err error
+
 		switch (entry.Type) {
 			case BMP:
-				bitmap, err := encodeBMP(entry.Image)
-				binary.Write(bitmaps, binary.LittleEndian, bitmap)
-
-				if err != nil {
-					return nil, err
-				}
+				bitmap, err = encodeBMP(entry.Image)
 			case PNG:
-				bitmap, err := encodePNG(entry.Image)
-				binary.Write(bitmaps, binary.LittleEndian, bitmap)
+				bitmap, err = encodePNG(entry.Image)
+		}
 
-				if err != nil {
-					return nil, err
-				}
+		binary.Write(bitmaps, binary.LittleEndian, bitmap)
+
+		if err != nil {
+			return nil, err
 		}
 
 		size = bitmaps.Len() - size
