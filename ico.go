@@ -99,5 +99,11 @@ func (self *icon) Add(t int, img image.Image, alphaIndex int) {
 		alphaIndex,
 	}
 
+	bounds := img.Bounds()
+
+	if bounds.Dx() > 255 || bounds.Dy() > 255 {
+		panic("ICO can't handle images larger than 255x255")
+	}
+
 	self.Entries = append(self.Entries, entry)
 }

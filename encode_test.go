@@ -37,6 +37,20 @@ func TestEncodingAnEmptyCursor(t *testing.T) {
 	assert.Equal(t, facit, bytes, "Encoding a blank ico should match the expected formt")
 }
 
+func TestAddingAnImageThatIsTooLargePanics(t *testing.T) {
+	icon := NewIcon()
+
+	big := image.NewRGBA(image.Rect(0,0,256,256))
+
+	assert.Panics(t, func() { icon.AddPng(big) }, "AddPng should panic if too large an image is attempted to be used")
+	assert.Panics(t, func() { icon.AddBmp(big) }, "AddBmp should panic if too large an image is attempted to be used")
+
+	small := image.NewRGBA(image.Rect(0,0,255,255))
+
+	assert.NotPanics(t, func() { icon.AddPng(small) }, "AddPng should not panic if the image is not too large")
+	assert.NotPanics(t, func() { icon.AddBmp(small) }, "AddBmp should not panic if the image is not too large")
+}
+
 func TestEncodingAnIcoWithASinglePNG(t *testing.T) {
 	icon := NewIcon()
 
