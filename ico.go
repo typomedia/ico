@@ -18,23 +18,23 @@ const BMP = 1
 const NOALPHA = -1
 
 type iconDir struct {
-	_          uint16 // Reserved, must always be 0.
-	iconType   uint16 // 1 for icon (.ICO) image, 2 for cursor (.CUR) image.
-	                  // Other values are invalid
+	_        uint16 // Reserved, must always be 0.
+	iconType uint16 // 1 for icon (.ICO) image, 2 for cursor (.CUR) image.
+	// Other values are invalid
 	imageCount uint16 // Number of images in the file.
 }
 
 type iconDirEntry struct {
-	width    uint8  // image width, 0 means 256 pixel width
-	height   uint8  // image height, 0 means 256 pixel height
-	colors   uint8  // Number of colors in the palette, 0 if palette isn't used
-	_        uint8  // Reserved, should be 0
-	planes   uint16 // ICO format: Color planes, should be 0 or 1
-	                // CUR format: Hotspot horizontal offset in pixels
-	bpp      uint16 // ICO format: Bits per pixel
-	                // CUR format: Hotspot vertical offset in pixels
-	size     uint32 // Size of the image in bytes
-	offset   uint32 // Offset of the BMP or PNG data from the beginning of the file
+	width  uint8  // image width, 0 means 256 pixel width
+	height uint8  // image height, 0 means 256 pixel height
+	colors uint8  // Number of colors in the palette, 0 if palette isn't used
+	_      uint8  // Reserved, should be 0
+	planes uint16 // ICO format: Color planes, should be 0 or 1
+	// CUR format: Hotspot horizontal offset in pixels
+	bpp uint16 // ICO format: Bits per pixel
+	// CUR format: Hotspot vertical offset in pixels
+	size   uint32 // Size of the image in bytes
+	offset uint32 // Offset of the BMP or PNG data from the beginning of the file
 }
 
 // NOTE:
@@ -49,8 +49,8 @@ type icon struct {
 	Type int
 
 	Entries []struct {
-		Type int
-		Image image.Image
+		Type       int
+		Image      image.Image
 		AlphaIndex int
 	}
 }
@@ -90,19 +90,13 @@ func (self *icon) AddBmpAlpha(img image.Image, alphaIndex int) {
 // Add an image to the icon structure
 func (self *icon) Add(t int, img image.Image, alphaIndex int) {
 	var entry = struct {
-		Type int
-		Image image.Image
+		Type       int
+		Image      image.Image
 		AlphaIndex int
-	} {
+	}{
 		t,
 		img,
 		alphaIndex,
-	}
-
-	bounds := img.Bounds()
-
-	if bounds.Dx() > 255 || bounds.Dy() > 255 {
-		panic("ICO can't handle images larger than 255x255")
 	}
 
 	self.Entries = append(self.Entries, entry)

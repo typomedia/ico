@@ -1,4 +1,4 @@
-module git.shangtai.net/staffan/go-ico
+module github.com/typomedia/ico
 
 go 1.17
 

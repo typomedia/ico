@@ -1,16 +1,16 @@
 package ico
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
+	"encoding/binary"
 	"image"
 	"image/png"
-	"encoding/binary"
-	bmp "golang.org/x/image/bmp"
+
+	"golang.org/x/image/bmp"
 )
 
 // Encode the icon structure to a complete ICO file
-//
 func (self *icon) Encode() ([]byte, error) {
 	header := new(bytes.Buffer)
 	bitmaps := new(bytes.Buffer)
@@ -29,7 +29,10 @@ func (self *icon) Encode() ([]byte, error) {
 		return nil, err
 	}
 
-	var offset = header.Len() + (binary.Size(iconDirEntry{}) * count)
+	length := header.Len()
+	size := binary.Size(iconDirEntry{})
+
+	var offset = length + (size * count)
 
 	for _, entry := range self.Entries {
 		bounds := entry.Image.Bounds()
@@ -43,11 +46,11 @@ func (self *icon) Encode() ([]byte, error) {
 		var bitmap []byte
 		var err error
 
-		switch (entry.Type) {
-			case BMP:
-				bitmap, err = encodeBMP(entry.Image)
-			case PNG:
-				bitmap, err = encodePNG(entry.Image)
+		switch entry.Type {
+		case BMP:
+			bitmap, err = encodeBMP(entry.Image)
+		case PNG:
+			bitmap, err = encodePNG(entry.Image)
 		}
 
 		binary.Write(bitmaps, binary.LittleEndian, bitmap)
@@ -56,7 +59,9 @@ func (self *icon) Encode() ([]byte, error) {
 			return nil, err
 		}
 
-		size = bitmaps.Len() - size
+		bmplen := bitmaps.Len()
+
+		size = bmplen - size
 
 		entry := iconDirEntry{
 			uint8(bounds.Dx()),
@@ -70,10 +75,10 @@ func (self *icon) Encode() ([]byte, error) {
 		}
 
 		binary.Write(header, binary.LittleEndian, entry)
-		offset += bitmaps.Len()
+		offset += size
 	}
 
-	return bytes.Join([][]byte{header.Bytes(),bitmaps.Bytes()}, []byte{}), nil
+	return bytes.Join([][]byte{header.Bytes(), bitmaps.Bytes()}, []byte{}), nil
 }
 
 func encodeBMP(img image.Image) ([]byte, error) {
@@ -89,7 +94,7 @@ func encodeBMP(img image.Image) ([]byte, error) {
 
 	writer.Flush()
 
-	return bitmap.Bytes()[14:], nil
+	return bitmap.Bytes(), nil
 }
 
 func encodePNG(img image.Image) ([]byte, error) {
@@ -107,4 +112,3 @@ func encodePNG(img image.Image) ([]byte, error) {
 
 	return bitmap.Bytes(), nil
 }
-
